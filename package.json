@@ -1,7 +1,7 @@
 {
   "name": "gusty",
   "version": "0.1.0",
-  "description": "GitHub Users Search API",
+  "description": "GitHub Users Search",
   "repository": "https://github.com/Ostrovski/gusty",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,7 @@
   "author": "Ivan Velichko <iximiuz@gmail.com>",
   "dependencies": {
     "koa": "^1.2.4",
+    "koa-router": "^5.4.0",
     "winston": "^2.2.0"
   },
   "devDependencies": {
