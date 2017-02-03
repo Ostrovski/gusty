@@ -1,0 +1,14 @@
+version: '2'
+services:
+  gusty_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+  nginx:
+    image: nginx:1.10.2
+    ports:
+      - '8080:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: always

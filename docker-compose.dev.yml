@@ -1,0 +1,8 @@
+version: '2'
+services:
+  gusty_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app:rw

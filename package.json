@@ -1,0 +1,29 @@
+{
+  "name": "gusty",
+  "version": "0.1.0",
+  "description": "GitHub Users Search API",
+  "repository": "https://github.com/Ostrovski/gusty",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --ignore node_modules index.js",
+    "test": "mocha"
+  },
+  "keywords": [
+    "GitHub",
+    "programming-lang",
+    "search",
+    "users"
+  ],
+  "author": "Ivan Velichko <iximiuz@gmail.com>",
+  "dependencies": {
+    "koa": "^1.2.4",
+    "winston": "^2.2.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  },
+  "engines": {
+    "node": "4.x"
+  }
+}
