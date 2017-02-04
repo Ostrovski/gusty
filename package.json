@@ -18,6 +18,8 @@
   "dependencies": {
     "koa": "^1.2.4",
     "koa-router": "^5.4.0",
+    "msgpack-lite": "^0.1.26",
+    "request": "^2.79.0",
     "winston": "^2.2.0"
   },
   "devDependencies": {

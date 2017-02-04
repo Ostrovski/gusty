@@ -1,4 +1,4 @@
-# Gusty - Github Users Search
+# Gusty - GitHub Users Search
 
 ## Task
 Create a service which provides a single API endpoint to search for GitHub users by the programming language they use in their public repositories. Each user returned in the response of the search request should at least contain the username, name, avatar url and number of followers.
@@ -31,3 +31,4 @@ docker-compose stop
 - I don't want to mess with babel.
 - I want keep it really simple.
 - But I want to show that I'm aware at least about dev/prod envs.
+- Access-Control-Allow-Origin: *
