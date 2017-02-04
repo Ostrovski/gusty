@@ -6,3 +6,5 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - .:/usr/src/app:rw
+    environment:
+      - LOG_LEVEL=debug

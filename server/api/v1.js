@@ -2,13 +2,16 @@
 
 // I like to explicitly pass dependencies.
 // Using ctx makes big apps pretty messy.
-module.exports = function(router, ghApiClient) {
-    // /langs/<lang>/accounts
-    // /langs/<lang>/users
-    // /langs/<lang>/orgs
+module.exports = function createApiHandler(router, ghApiClient) {
+    // /search/accounts
+    // /search/users
+    // /search/orgs
 
-    router.get('/users/search', function *searchV1(next) {
-        this.body = {foo: 'Hi from v1 api!'};
+    router.get('/search/:accountType', function *searchV1(next) {
+        // this.params.accountType
+        const users = yield ghApiClient.searchUsers(this.request.query.lang);
+
+        this.body = users;
     });
     return router;
 }

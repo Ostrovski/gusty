@@ -11,6 +11,10 @@ const ApiV2 = require('./api/v2');
 const respondWith = require('./middlewares/respond-with');
 const rewriteAccept = require('./middlewares/rewrite-accept');
 
+const logger = require('winston');
+logger.emitErrs = true;
+logger.level = process.env.LOG_LEVEL || 'warn';
+
 // if (!config.sessionSecret) {
 //     throw new Error('Define config.sessionSecret');
 // }
@@ -20,13 +24,17 @@ const rewriteAccept = require('./middlewares/rewrite-accept');
 // }
 
 const app = koa();
-app.keys = [ /*config.sessionSecret*/ 'alaverdy' ];
+app.on('error', function(err, ctx) {
+    logger.error(`${err.message}. ${err.description || ''}`);
+});
 
-const client = new GitHubApiClient(request, {apiUrl: 'https://api.github.com'});
+const client = new GitHubApiClient(
+    request,
+    {rootEndpoint: 'https://api.github.com'},
+    logger
+);
 const apiV1 = ApiV1(koaRouter({prefix: '/api/v1'}), client);
 const apiV2 = ApiV2(koaRouter({prefix: '/api/v2'}), client);
-
-
 
 app
   .use(rewriteAccept({
