@@ -21,8 +21,8 @@ class ApiClient {
             'Accept': options.accept || 'application/vnd.github.v3+json'
         };
         this.cache = LRU({
-            max: options.cacheMaxSize || 10000,
-            maxAge: options.cacheMaxAge || 1000*60*60
+            max: options.cacheMaxSize || 1000,
+            maxAge: options.cacheMaxAge || 1000*60*10
         });
         this._request = request;
     }

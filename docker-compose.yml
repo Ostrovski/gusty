@@ -5,6 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
+    environment:
+      - CACHE_MAX_SIZE=10000
+      - CACHE_MAX_AGE=3600000
+    env_file:
+      - gusty-vars.env
   nginx:
     image: nginx:1.10.2
     ports:
