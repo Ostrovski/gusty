@@ -24,6 +24,7 @@
     "msgpack-lite": "^0.1.26",
     "parse-link-header": "^0.4.1",
     "request": "^2.79.0",
+    "run-parallel-limit": "^1.0.3",
     "winston": "^2.2.0"
   },
   "devDependencies": {

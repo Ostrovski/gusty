@@ -11,9 +11,9 @@ Please put the project on github.
 
 ## Features
 - API versioning
-- Different content types (via HTTP headers or URLs)
-- Auth (?)
-- Requests limitation
+- Different content types (via HTTP Accept header or URLs suffix)
+- LRU cache for GitHub API responses
+- Pagination via "Hypermedia link relations" (HTTP Link header)
 
 ## Commands
 ```
@@ -27,17 +27,19 @@ docker-compose -f docker-compose.yml up [-d]
 docker-compose stop
 ```
 
-## Options
-```
-PORT
-LOG_LEVEL
-GITHUB_API_ENDPOINT
-API_ACCESS_TOKEN
-OAUTH_CLIENT_ID
-OAUTH_CLIENT_SECRET
-CACHE_MAX_SIZE
-CACHE_MAX_AGE
-```
+## Limitations
+Get personal access token (see https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
+or use OAuth client_id & client_secret to increase rate limits.
 
-## Misc
- - Get keys from here https://help.github.com/articles/creating-an-access-token-for-command-line-use/
+## Options
+The following options could be specified via `docker-compose.*.yml` or `gusty-vars.env`.
+```
+PORT                  # TCP port to run gusty app (backend). Default is 5000.
+LOG_LEVEL             # Gust app logging level. Default is 'warn'.
+GITHUB_API_ENDPOINT   # Default is https://api.github.com
+API_ACCESS_TOKEN      # No default value.
+OAUTH_CLIENT_ID       # No default value.
+OAUTH_CLIENT_SECRET   # No default value.
+CACHE_MAX_SIZE        # GitHub API client cache size. I.e. max number of in-memory saved responses. Default is 1000.
+CACHE_MAX_AGE         # GitHub API client cache item TTL. Default is 10 min.
+```

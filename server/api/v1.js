@@ -49,9 +49,18 @@ module.exports = function createApiHandler(router, ghApiClient) {
         }
 
         const results = yield ghApiClient.searchUsers(this.query.lang, options);
-
         this.state._x_GitHubRel = results.rel;
-        this.body = results.data;
+
+        const users = yield ghApiClient.requests(results.data.items.map((i) => i.url));
+        this.body = users.map((u) => {
+            return {
+                id: u.id,
+                username: u.login,
+                name: u.name,
+                avatarUrl: u.avatar_url,
+                followers: u.followers
+            };
+        });
     });
     return router;
 };
