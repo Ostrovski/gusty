@@ -1,5 +1,6 @@
 'use strict';
 
+const parseLinkHeader = require('parse-link-header');
 const querystring = require('querystring');
 
 class ApiClient {
@@ -9,15 +10,6 @@ class ApiClient {
     //   13c3a0f567986ae354a5
     // Client Secret
     //   164e5694f2829ba96bca4d050dbcb8555d7c7fb2
-
-    // Add ?client_id=xxxx&client_secret=yyyy or ?access_token=OAUTH-TOKEN
-    // Add header Accept: application/vnd.github.v3+json
-    // User-Agent: Awesome-Octocat-App
-
-    // Sorting
-    // Number of followers
-    // Number of repositories
-    // When they joined GitHub
 
     constructor(request, options, logger) {
         this.rootEndpoint = options.rootEndpoint.replace(/\/$/, '');
@@ -37,8 +29,13 @@ class ApiClient {
 
     searchUsers(lang, options) {
         options = options || {};
-        const params = {
-            q: 'language:"' + lang + '"'
+        const params = Object.assign(
+            {q: `language:"${lang}"`},
+            options.sorting || {},
+            options.paging || {}
+        );
+        if (options.type) {
+            params.q += ' type:' + options.type;
         }
         return this.request('/search/users', params);
     }
@@ -47,7 +44,10 @@ class ApiClient {
         return new Promise((resolve, reject) => {
             const req = {
                 url: this._url(path, params),
-                headers: {'User-Agent': this.userAgent}
+                headers: {
+                    'User-Agent': this.userAgent,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
             };
 
             this._request(req, (error, response, body) => {
@@ -57,7 +57,14 @@ class ApiClient {
 
                 if (!error && response.statusCode == 200) {
                     try {
-                        resolve(JSON.parse(body));
+                        let data = JSON.parse(body);
+                        if (response.headers.link) {
+                            data = {
+                                data: data,
+                                rel: parseLinkHeader(response.headers.link)
+                            };
+                        }
+                        resolve(data);
                     } catch (e) {
                         reject(_err(500, response, e));
                     }
@@ -69,7 +76,14 @@ class ApiClient {
     }
 
     _url(path, params) {
-        return `${this.rootEndpoint}${path}?${querystring.stringify(params || {})}`;
+        params = params || {};
+        if (this.clientId && this.clientSecret) {
+            params.client_id = this.clientId;
+            params.client_secret = this.clientSecret;
+        } else if (this.accessToken) {
+            params.access_token = this.accessToken;
+        }
+        return `${this.rootEndpoint}${path}?${querystring.stringify(params)}`;
     }
 }
 

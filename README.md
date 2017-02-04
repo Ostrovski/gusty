@@ -31,4 +31,3 @@ docker-compose stop
 - I don't want to mess with babel.
 - I want keep it really simple.
 - But I want to show that I'm aware at least about dev/prod envs.
-- Access-Control-Allow-Origin: *

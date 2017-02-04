@@ -19,5 +19,5 @@ module.exports = function respondWith(codecs) {
                 // TODO: log
             }
         }
-    }
-}
+    };
+};

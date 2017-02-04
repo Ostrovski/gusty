@@ -16,9 +16,12 @@
   ],
   "author": "Ivan Velichko <iximiuz@gmail.com>",
   "dependencies": {
+    "format-link-header": "^2.0.0",
     "koa": "^1.2.4",
     "koa-router": "^5.4.0",
+    "koa-validate": "^1.0.7",
     "msgpack-lite": "^0.1.26",
+    "parse-link-header": "^0.4.1",
     "request": "^2.79.0",
     "winston": "^2.2.0"
   },

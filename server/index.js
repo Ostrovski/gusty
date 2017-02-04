@@ -2,12 +2,15 @@
 
 const koa = require('koa');
 const koaRouter = require('koa-router');
+const koaValidate = require('koa-validate');
 const msgpack = require('msgpack-lite');
 const request = require('request');
 
+const errorHandler = require('./errors');
 const GitHubApiClient = require('./github-api-client');
 const ApiV1 = require('./api/v1');
 const ApiV2 = require('./api/v2');
+const linkHeader = require('./middlewares/link-header');
 const respondWith = require('./middlewares/respond-with');
 const rewriteAccept = require('./middlewares/rewrite-accept');
 
@@ -27,6 +30,7 @@ const app = koa();
 app.on('error', function(err, ctx) {
     logger.error(`${err.message}. ${err.description || ''}`);
 });
+koaValidate(app);
 
 const client = new GitHubApiClient(
     request,
@@ -45,6 +49,8 @@ app
       'application/json': (b) => b,  // as is
       'application/x-msgpack': msgpack.encode
   }))
+  .use(errorHandler())
+  .use(linkHeader())
   .use(apiV1.routes())
   .use(apiV1.allowedMethods())
   .use(apiV2.routes())
