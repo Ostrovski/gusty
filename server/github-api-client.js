@@ -1,11 +1,10 @@
 'use strict';
 
+const LRU = require('lru-cache');
 const parseLinkHeader = require('parse-link-header');
 const querystring = require('querystring');
 
 class ApiClient {
-    // https://developer.github.com/guides/best-practices-for-integrators/
-    // https://help.github.com/articles/creating-an-access-token-for-command-line-use/
     // Client ID
     //   13c3a0f567986ae354a5
     // Client Secret
@@ -13,18 +12,36 @@ class ApiClient {
 
     constructor(request, options, logger) {
         this.rootEndpoint = options.rootEndpoint.replace(/\/$/, '');
-        this.userAgent = options.userAgent || 'Gusty-Ostrovski-App';
         this.accessToken = options.accessToken;
         this.clientId = options.clientId;
         this.clientSecret = options.clientSecret;
         this.logger = logger;
+        this.headers = {
+            'User-Agent': options.userAgent || 'Gusty-Ostrovski-App',
+            'Accept': options.accept || 'application/vnd.github.v3+json'
+        };
+        this.cache = LRU({
+            max: options.cacheMaxSize || 10000,
+            maxAge: options.cacheMaxAge || 1000*60*60
+        });
         this._request = request;
     }
 
-    // Make requests for a single user or client ID serially. Do not make requests for a single user or client ID concurrently.
-    // Check Retry-After header
     getUser(username) {
-        // Use ETag
+        return this.request(`/users/${username}`);
+    }
+
+    /**
+     * Nicely loads user profiles trying not to abuse rate limits.
+     *
+     * Quote from https://developer.github.com/guides/best-practices-for-integrators/:
+     * "Make requests for a single user or client ID serially. Do not make requests
+     *  for a single user or client ID concurrently.
+     *  ...
+     *  Check Retry-After header."
+     */
+    getUsers(usernames) {
+
     }
 
     searchUsers(lang, options) {
@@ -44,10 +61,7 @@ class ApiClient {
         return new Promise((resolve, reject) => {
             const req = {
                 url: this._url(path, params),
-                headers: {
-                    'User-Agent': this.userAgent,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
+                headers: this.headers
             };
 
             this._request(req, (error, response, body) => {

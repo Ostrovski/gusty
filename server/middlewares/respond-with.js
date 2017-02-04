@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function respondWith(codecs) {
+module.exports = function respondWith(codecs, logger) {
     const supportedFormats = Object.keys(codecs);
 
     return function *(next) {
@@ -16,7 +16,7 @@ module.exports = function respondWith(codecs) {
                 this.body = codec(this.body);
                 this.response.type = contentType;
             } else {
-                // TODO: log
+                logger.warn('Unknown codec. contentType=' + contentType);
             }
         }
     };

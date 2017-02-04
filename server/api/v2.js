@@ -1,10 +1,5 @@
 'use strict';
 
-// I like to explicitly pass dependencies.
-// Using ctx makes big apps pretty messy.
-module.exports = function createApiHandler(router, ghApiClient) {
-    router.get('/users/search', function *(next) {
-        this.body = 'Hi from v2 api!'
-    });
-    return router;
-};
+// Here might be a second version of the same API.
+// Just to show how versioning is organised (see ../index.js).
+module.exports = require('./v1');

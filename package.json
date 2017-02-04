@@ -20,6 +20,7 @@
     "koa": "^1.2.4",
     "koa-router": "^5.4.0",
     "koa-validate": "^1.0.7",
+    "lru-cache": "^4.0.2",
     "msgpack-lite": "^0.1.26",
     "parse-link-header": "^0.4.1",
     "request": "^2.79.0",

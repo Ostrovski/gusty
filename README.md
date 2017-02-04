@@ -27,7 +27,17 @@ docker-compose -f docker-compose.yml up [-d]
 docker-compose stop
 ```
 
+## Options
+```
+PORT
+LOG_LEVEL
+GITHUB_API_ENDPOINT
+API_ACCESS_TOKEN
+OAUTH_CLIENT_ID
+OAUTH_CLIENT_SECRET
+CACHE_MAX_SIZE
+CACHE_MAX_AGE
+```
+
 ## Misc
-- I don't want to mess with babel.
-- I want keep it really simple.
-- But I want to show that I'm aware at least about dev/prod envs.
+ - Get keys from here https://help.github.com/articles/creating-an-access-token-for-command-line-use/
