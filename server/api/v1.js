@@ -53,6 +53,7 @@ module.exports = function createApiHandler(router, ghApiClient) {
 
         const users = yield ghApiClient.requests(results.data.items.map((i) => i.url));
         this.body = users.map((u) => {
+            u = u.data;
             return {
                 id: u.id,
                 username: u.login,

@@ -24,6 +24,17 @@ class ApiClient {
         this._request = request;
     }
 
+    /**
+     * Populates (inplace) collection of items (users, organizations, repos, etc).
+     *
+     * It expectes that each item is an object with `url` property.
+     *
+     * Result contains list of incomplete items ids if any.
+     */
+    populate(items) {
+
+    }
+
     searchUsers(lang, options) {
         options = options || {};
         const params = Object.assign(
@@ -37,6 +48,14 @@ class ApiClient {
         return this.request('/search/users', params);
     }
 
+    /**
+     * Makes a request to the GitHub API.
+     *
+     * URL can be relative or absolute.
+     * For requests without query params internal in-memory cache will be used.
+     * In case of cache miss there will be a second consequent request without
+     * `If-None-Match` header.
+     */
     request(url, params) {
         params = params || {};
 
@@ -48,29 +67,54 @@ class ApiClient {
 
             // Caches works only for URLs without any params - mainly just for simplicity.
             const cacheKey = -1 === url.indexOf('?') ? url : null;
-            let cached = null;
-            if (cacheKey) {
-                cached = this.cache.get(cacheKey);
-                if (cached) {
-                    req.headers['If-None-Match'] = cached.ETag;
-                }
+            const cached = cacheKey && this.cache.get(cacheKey);
+            if (cached) {
+                req.headers['If-None-Match'] = cached.ETag;
             }
 
             this._request(req, (err, response, body) => {
-                this.logger.debug(
-                    `GitHub API request [${req.url}] -> HTTP ${response.statusCode} ${body}`
-                );
+                this._logRequest(req, err, response, body);
 
-                if (err) {
-                    return reject(_err(500, response, err));
+                try {
+                    if (err) {
+                        return reject(this._handleErr(err));
+                    }
+
+                    if (response.statusCode == 200) {
+                        const result = this._handle200(response, body);
+                        if (response.headers.etag && cacheKey) {
+                           this.cache.set(cacheKey, {ETag: response.headers.etag, result: result});
+                        }
+                        return resolve(result);
+                    }
+
+                    if (response.statusCode == 304) {
+                        if (cached) {
+                            this.logger.debug('Cache hit. ETag=' + cached.ETag);
+                            return resolve(cached.result);
+                        }
+
+                        // Retry this request but already withot If-None-Match header.
+                        this.logger.debug('Unexpected cache miss.');
+                        return this.request(url, params).then(resolve).catch(reject);
+                    }
+
+                    if (response.statusCode == 401) {
+                        return reject(this._handle401(body));
+                    }
+
+                    if (response.statusCode == 403) {
+                        return reject(this._handle403(response, body));
+                    }
+
+                    if (response.statusCode == 404) {
+                        return reject(this._handle404(req));
+                    }
+
+                    return reject(this._handle000(response, body));
+                } catch (e) {
+                    reject(e);
                 }
-                if (response.statusCode == 200) {
-                    return this._handle200(cacheKey, response, body, resolve, reject);
-                }
-                if (response.statusCode == 304) {
-                    return this._handle304(cached, response, resolve, reject);
-                }
-                reject(_err(500, response, new Error('Unexpected status code')));
             });
         });
     }
@@ -83,6 +127,10 @@ class ApiClient {
      *  for a single user or client ID concurrently.
      *  ...
      *  Check Retry-After header."
+     *
+     * Result of this fuction is an array which size is equal to the urls.length.
+     * Some positions inside this array may contain errors instead of fetched data.
+     * It's up to caller to retry failed requests.
      */
     requests(urls) {
         const thunkify = (url) => {
@@ -104,31 +152,54 @@ class ApiClient {
         });
     }
 
-    _handle200(cacheKey, response, body, resolve, reject) {
-        try {
-            let data = JSON.parse(body);
-            if (response.headers.link) {
-                data = {
-                    data: data,
-                    rel: parseLinkHeader(response.headers.link)
-                };
-            }
-            if (response.headers.etag && cacheKey) {
-                this.cache.set(cacheKey, {ETag: response.headers.etag, data: data});
-            }
-            resolve(data);
-        } catch (e) {
-            reject(_err(500, response, e));
+    _handle200(response, body) {
+        const result = {data: _parseJsonResponse(body), rel: {}};
+        if (response.headers.link) {
+            result.rel = parseLinkHeader(response.headers.link);
         }
+        return result;
     }
 
-    _handle304(cached, response, resolve, reject) {
-        if (cached) {
-            this.logger.debug('Cache hit! ETag=' + cached.ETag);
-            resolve(cached.data);
-        } else {
-            reject(_err(500, response, new Error('Unexpected cache miss')));
+    _handle401(body) {
+        return _err(401, 'Bad credentials', 'GitHub API response: ' + body);
+    }
+
+    _handle403(response, body) {
+        let description = '';
+        if (response.headers['x-ratelimit-remaining'] == 0) {
+            description = 'GitHub API rate limit exceeded.';
+            let resetAt = response.headers['x-ratelimit-reset'];
+            if (resetAt) {
+                description += ' Rate limits will be reset at: ' + resetAt;
+            } else if (response.headers['retry-after']) {
+                description += ' Retry after ' + response.headers['retry-after'] + ' sec';
+            }
         }
+        return _err(403, 'Forbidden', description);
+    }
+
+    _handle404(request) {
+        return _err(404, 'Resource not found', 'GitHub API Resource: ' + request.url);
+    }
+
+    _handle000(response, body) {
+        return _err(500,
+            'Unexpected response',
+            `GitHub API response: HTTP ${response.statusCode} ${body}`
+        );
+    }
+
+    _handleErr(err) {
+        return _err(500, 'Request failed', '', e);
+    }
+
+    _logRequest(req, err, resp, body) {
+        const request = req.url
+            + (req.headers['If-None-Match'] ? ` +ETag=${req.headers['If-None-Match']}` : '');
+        const response = err
+            ? 'error'
+            : `HTTP ${(resp || {}).statusCode} ${body}`;
+        this.logger.debug(`GitHub API request [${request}] -> ${response}`);
     }
 
     _url(url, params) {
@@ -149,17 +220,21 @@ class ApiClient {
     }
 }
 
-function _err(status, response, cause) {
-    const err = new Error('GitHub API request failed');
+function _err(status, message, description, cause) {
+    const err = new Error('GitHub API Client Error: ' + message);
+    err.expose = true;
     err.status = status;
-    err.description = '';
-    if (response && response.statusCode) {
-        err.description += `API response status_code=${response.statusCode};`;
-    }
-    if (cause) {
-        err.description += ` cause=${cause};`;
-    }
+    err.description = description;
+    err.cause = cause;
     return err;
+}
+
+function _parseJsonResponse(body) {
+    try {
+        return JSON.parse(body);
+    } catch (e) {
+        throw _err(500, 'Cannot parse JSON body', 'Response body: ' + body, e);
+    }
 }
 
 module.exports = ApiClient;

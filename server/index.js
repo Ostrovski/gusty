@@ -6,21 +6,23 @@ const koaValidate = require('koa-validate');
 const msgpack = require('msgpack-lite');
 const request = require('request');
 
-const errorHandler = require('./errors');
 const GitHubApiClient = require('./github-api-client');
 const ApiV1 = require('./api/v1');
 const ApiV2 = require('./api/v2');
+const errorHandler = require('./middlewares/errors');
 const linkHeader = require('./middlewares/link-header');
 const respondWith = require('./middlewares/respond-with');
 const rewriteAccept = require('./middlewares/rewrite-accept');
 
 const logger = require('winston');
+logger.remove(logger.transports.Console);
+logger.add(logger.transports.Console, {'timestamp': true});
 logger.emitErrs = true;
 logger.level = process.env.LOG_LEVEL || 'warn';
 
 const app = koa();
 app.on('error', function(err, ctx) {
-    logger.error(`${err.message}. ${err.description || ''}`);
+    logger.error(_errToString(err));
 });
 koaValidate(app);
 
@@ -56,3 +58,18 @@ app
   .use(apiV2.allowedMethods());
 
 module.exports = app;
+
+// Utils
+function _errToString(err) {
+    let message = err.message;
+    if (err.description) {
+        message += '. ' + err.description;
+    }
+    if (err.stack) {
+        message += '\n' + err.stack;
+    }
+    if (err.cause) {
+        message += '\nCaused by: ' + _errToString(err.cause);
+    }
+    return message;
+}
