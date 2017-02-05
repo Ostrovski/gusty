@@ -49,19 +49,27 @@ module.exports = function createApiHandler(router, ghApiClient) {
         }
 
         const results = yield ghApiClient.searchUsers(this.query.lang, options);
-        this.state._x_GitHubRel = results.rel;
+        const incomplete = yield ghApiClient.populate(results.data.items);
 
-        const users = yield ghApiClient.requests(results.data.items.map((i) => i.url));
-        this.body = users.map((u) => {
-            u = u.data;
-            return {
-                id: u.id,
-                username: u.login,
-                name: u.name,
-                avatarUrl: u.avatar_url,
-                followers: u.followers
-            };
-        });
+        this.state._x_GitHubRel = results.rel;  // For pagination.
+        this.body = {
+            incomplete: incomplete,
+            items: result.data.items.map((u) => {
+                const item = {
+                    id: u.id,
+                    username: u.login,
+                    name: u.name,
+                    avatarUrl: u.avatar_url,
+                    followers: u.followers
+                };
+                for (let f in item) {
+                    if (item[f] === undefined) {
+                        delete item[f];
+                    }
+                }
+                return item;
+            })
+        }
     });
     return router;
 };

@@ -32,7 +32,7 @@ class ApiClient {
      * Result contains list of incomplete items ids if any.
      */
     populate(items) {
-
+        return this.requests(items.map((i) => i.url));
     }
 
     searchUsers(lang, options) {
@@ -128,7 +128,7 @@ class ApiClient {
      *  ...
      *  Check Retry-After header."
      *
-     * Result of this fuction is an array which size is equal to the urls.length.
+     * Size of the resulting array is always equal to the urls.length.
      * Some positions inside this array may contain errors instead of fetched data.
      * It's up to caller to retry failed requests.
      */
@@ -137,12 +137,15 @@ class ApiClient {
             return (cb) => {
                 this.request(url).then((res) => {
                     cb(null, res);
-                }).catch(cb);
+                }).catch((err) => {
+                    cb(null, err);
+                });
             };
         };
 
         return new Promise((resolve, reject) => {
             parallelLimit(urls.map(thunkify), this.maxConcurrency, (err, res) => {
+                // TODO: assert(!err);
                 if (err) {
                     reject(err);
                 } else {
@@ -190,7 +193,7 @@ class ApiClient {
     }
 
     _handleErr(err) {
-        return _err(500, 'Request failed', '', e);
+        return _err(500, 'Request failed', '', err);
     }
 
     _logRequest(req, err, resp, body) {

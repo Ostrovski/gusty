@@ -25,6 +25,9 @@ docker-compose -f docker-compose.yml up [-d]
 
 # Stop service
 docker-compose stop
+
+# Testing
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml run gusty_app npm test
 ```
 
 ## Limitations
