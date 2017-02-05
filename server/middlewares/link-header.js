@@ -15,7 +15,7 @@ module.exports = function linkHeader() {
         let header = this.state._x_GitHubRel;
         if (header) {
             const url = URL.parse(this.request.href, true);
-            delete url.search;  // I hate JS! Not, relly! Why? Wtf?
+            delete url.search;  // Huh
             for (let k of Object.keys(header)) {
                 header[k] = {
                     page: header[k].page,
