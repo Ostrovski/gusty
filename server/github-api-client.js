@@ -32,7 +32,34 @@ class ApiClient {
      * Result contains list of incomplete items ids if any.
      */
     populate(items) {
-        return this.requests(items.map((i) => i.url));
+        let tasks = items.map((i) => ({item: i, retryCnt: 0}));
+
+        return new Promise((resolve, reject) => {
+            const _populate = (tasks) => {
+                const toBeDone = tasks.filter((t) => !t.done && t.retryCnt < 5);
+                if (toBeDone.length) {
+                    this.requests(toBeDone.map((t) => t.item.url)).then((responses) => {
+                        for (let i in responses) {
+                            const resp = responses[i];
+                            const task = toBeDone[i];
+                            if (resp) {
+                                Object.assign(task.item, resp.data);
+                                task.done = true;
+                            } else {
+                                task.retryCnt++;
+                            }
+                        }
+
+                        _populate(tasks)
+                    }).catch(reject);
+                } else {
+                    const incomplete = tasks.filter((t) => !t.done && t.item);
+                    resolve(incomplete);
+                }
+             };
+
+             _populate(tasks);
+        });
     }
 
     searchUsers(lang, options) {

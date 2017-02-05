@@ -54,7 +54,7 @@ module.exports = function createApiHandler(router, ghApiClient) {
         this.state._x_GitHubRel = results.rel;  // For pagination.
         this.body = {
             incomplete: incomplete,
-            items: result.data.items.map((u) => {
+            items: results.data.items.map((u) => {
                 const item = {
                     id: u.id,
                     username: u.login,

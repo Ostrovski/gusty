@@ -44,12 +44,12 @@ describe('GitHub API Client Test Suite', () => {
         cacheMaxAge: 10000
     };
 
-    it('should try to execute all requests', (done) => {
+    it('should try to execute all requests', () => {
         const serverMock = serverMockAlternate();
         const client = new Client(createRequestStub(serverMock), clientOpts, loggerStub);
 
         const urls = ['/users/1', '/users/2', '/users/3', '/users/4', '/users/5'];
-        client.requests(urls).then((responses) => {
+        return client.requests(urls).then((responses) => {
             for (let i in responses) {
                 if (i % 2 === 0) {
                     assert.notInstanceOf(responses[i], Error);
@@ -57,9 +57,42 @@ describe('GitHub API Client Test Suite', () => {
                     assert.instanceOf(responses[i], Error);
                 }
             }
-            done();
-        }).catch((err) => {
-            assert.notOk(err)
         });
+    });
+
+    it('should populate items', () => {
+        const serverMock = (url) => {
+            const id = parseInt(url.split('/').pop());
+            return {
+                err: null,
+                response: {statusCode: 200, headers: {}},
+                body: JSON.stringify({id: id, name: `name${id}`})
+            };
+        };
+        const client = new Client(createRequestStub(serverMock), clientOpts, loggerStub);
+
+        const items = [
+            {id: 1, url: '/users/1'},
+            {id: 3, url: '/users/2'},
+            {id: 2, url: '/users/3'}
+        ];
+        return client.populate(items).then((incomplete) => {
+            assert.equal(incomplete.length, 0);
+            for (let i of items) {
+                assert.equal(i.name, `name${i.id}`);
+            }
+        });
+    });
+
+    it('should populate as many as possible', (done) => {
+        done();
+    });
+
+    it('should work with empty responses', (done) => {
+        done();
+    });
+
+    it('should work for errored responses', (done) => {
+        done();
     });
 });
