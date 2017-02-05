@@ -16,7 +16,7 @@ Search URL format is `/api/v1/search/:account_type` where `:account_type` can be
 
 ### Incomplete results detection
 Each search attempt produces bunch of requests to GitHub API. There is always a one request for
-`/search/users` plus up to 100 subsecuent requests for member profiles. Since GitHub strictly limits
+`/search/users` plus up to 100 subsequent requests for member profiles. Since GitHub strictly limits
 number of requests to its API there could be a situation when only a part of profile requests is
 fulfilled. For such situations each search result contains field called `incomplete`. It's an array
 of user IDs without profile data.
@@ -78,6 +78,8 @@ curl http://localhost:8080/api/v1/search/users?lang=elixir&sort=joined&order=asc
 ## Testing
 Use the following command to run tests:
 ```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml run gusty_app build --no-cache  # Maybe required if there was a previous 'prod' build
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml run gusty_app npm instal
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml run gusty_app npm test
 ```
 There is two test cases. One for GitHub API client (kinda unit testing) and one for an entire app
