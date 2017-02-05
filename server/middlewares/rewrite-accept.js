@@ -1,5 +1,11 @@
 'use strict';
 
+/**
+ * Allows to specify `Accept`ed content type for HTTP responses via URLs suffixes.
+ *
+ * I.e. one can use `/search/users.json` or `/search/users.msgp` instead of providing
+ * corresponding `Accept` headers.
+ */
 module.exports = function rewriteAccess(formats) {
     formats = formats || {};
 

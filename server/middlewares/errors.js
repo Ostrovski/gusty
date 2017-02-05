@@ -1,5 +1,13 @@
 'use strict';
 
+/**
+ * Global error handler.
+ *
+ * It catches all the errors and shows them to API users.
+ * Errors with `expose == true` property considered as
+ * already a user-friendly. Other errors will be replaced
+ * with a general message.
+ */
 module.exports = function createErrorHandler() {
     return function *errorHandler(next) {
         try {

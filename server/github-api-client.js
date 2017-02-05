@@ -12,6 +12,7 @@ class ApiClient {
         this.clientId = options.clientId;
         this.clientSecret = options.clientSecret;
         this.maxConcurrency = options.maxConcurrency || 5;
+        this.maxRetries = options.maxRetries || 5;
         this.logger = logger;
         this.headers = {
             'User-Agent': options.userAgent || 'Gusty-Ostrovski-App',
@@ -36,24 +37,24 @@ class ApiClient {
 
         return new Promise((resolve, reject) => {
             const _populate = (tasks) => {
-                const toBeDone = tasks.filter((t) => !t.done && t.retryCnt < 5);
+                const toBeDone = tasks.filter((t) => !t.done && t.retryCnt < this.maxRetries);
                 if (toBeDone.length) {
                     this.requests(toBeDone.map((t) => t.item.url)).then((responses) => {
                         for (let i in responses) {
                             const resp = responses[i];
                             const task = toBeDone[i];
-                            if (resp) {
+                            if (resp instanceof Error) {
+                                task.retryCnt++;
+                            } else {
                                 Object.assign(task.item, resp.data);
                                 task.done = true;
-                            } else {
-                                task.retryCnt++;
                             }
                         }
 
                         _populate(tasks)
                     }).catch(reject);
                 } else {
-                    const incomplete = tasks.filter((t) => !t.done && t.item);
+                    const incomplete = tasks.filter((t) => !t.done).map((t) => t.item.id);
                     resolve(incomplete);
                 }
              };
@@ -131,7 +132,7 @@ class ApiClient {
                     }
 
                     if (response.statusCode == 403) {
-                        return reject(this._handle403(response, body));
+                        return reject(this._handle403(response));
                     }
 
                     if (response.statusCode == 404) {
@@ -194,7 +195,7 @@ class ApiClient {
         return _err(401, 'Bad credentials', 'GitHub API response: ' + body);
     }
 
-    _handle403(response, body) {
+    _handle403(response) {
         let description = '';
         if (response.headers['x-ratelimit-remaining'] == 0) {
             description = 'GitHub API rate limit exceeded.';

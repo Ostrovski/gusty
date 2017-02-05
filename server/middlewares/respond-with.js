@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * Encode the body of HTTP response in accordance with `Accept` header or
+ * a flag `ctx.state._x_acceptContentType`. The last one has a higher priority.
+ */
 module.exports = function respondWith(codecs, logger) {
     const supportedFormats = Object.keys(codecs);
 

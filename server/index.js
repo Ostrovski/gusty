@@ -43,18 +43,18 @@ const apiV2 = ApiV2(koaRouter({prefix: '/api/v2'}), client);
 
 app
   .use(rewriteAccept({
-      '.json': 'application/json',
-      '.msgp': 'application/x-msgpack'
+      '.json': 'application/json',      // Allows URLs like /search/users.json
+      '.msgp': 'application/x-msgpack'  //  ... or /search/users.msgp
   }))
   .use(respondWith({
-      'application/json': (b) => b,  // as is
+      'application/json': (b) => b,     // as is
       'application/x-msgpack': msgpack.encode
   }, logger))
   .use(errorHandler())
   .use(linkHeader())
   .use(apiV1.routes())
   .use(apiV1.allowedMethods())
-  .use(apiV2.routes())
+  .use(apiV2.routes())                  //  Just an example how versioning could be done.
   .use(apiV2.allowedMethods());
 
 module.exports = app;

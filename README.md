@@ -30,6 +30,9 @@ docker-compose stop
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml run gusty_app npm test
 ```
 
+## Usage examples
+...
+
 ## Limitations
 Get personal access token (see https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
 or use OAuth client_id & client_secret to increase rate limits.
